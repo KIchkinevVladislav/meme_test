@@ -6,8 +6,7 @@ from app.router import meme_router
 app = FastAPI()
 
 
-app.include_router(meme_router, prefix="/meme", tags=["meme"])
-
+app.include_router(meme_router, prefix="/memes", tags=["meme"])
 
 
 if __name__ == "__main__":
