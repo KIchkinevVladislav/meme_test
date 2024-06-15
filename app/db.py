@@ -7,7 +7,7 @@ from sqlalchemy.orm import sessionmaker
 from typing import AsyncGenerator
 
 
-REAL_DATABASE_URL ="postgresql+asyncpg://postgres:postgres@db:5432/postgres"
+REAL_DATABASE_URL ="postgresql+asyncpg://postgres:postgres@localhost:5432/postgres"
 
 engine = create_async_engine(
     REAL_DATABASE_URL,

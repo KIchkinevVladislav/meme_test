@@ -1,12 +1,12 @@
 import uvicorn
 from fastapi import FastAPI
 
-# router here 
+from app.router import meme_router
 
 app = FastAPI()
 
 
-# include here
+app.include_router(meme_router, prefix="/meme", tags=["meme"])
 
 
 
