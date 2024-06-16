@@ -2,12 +2,11 @@ from fastapi import APIRouter, Query, Depends, HTTPException, File, UploadFile, 
 from sqlalchemy.ext.asyncio import AsyncSession
 from minio.error import S3Error
 
-from .db import get_db
-from .schemas import LoadingMeme, StatusResponse, ShowMemes
-from .crud import  get_list_memes, save_meme, delete_meme_in_db, get_meme_from_db
+from database.db import get_db
+from database.schemas import LoadingMeme, StatusResponse, ShowMemes
+from app.crud import  get_list_memes, save_meme, delete_meme_in_db, get_meme_from_db
 from minio_server import minio_client
 
-from app.models import Meme
 from validate import validate_image
 
 

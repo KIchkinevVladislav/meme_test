@@ -4,7 +4,7 @@ from sqlalchemy import desc, delete
 from typing import List, Optional
 from fastapi import HTTPException, UploadFile
 
-from .models import Meme
+from database.models import Meme
 from minio_server import update_image_in_minio, upload_image_to_minio, delete_image_from_minio
 
 
