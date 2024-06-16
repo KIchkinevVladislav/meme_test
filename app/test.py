@@ -75,3 +75,36 @@
 #         return Response(content=content, media_type="image/jpeg")
 #     except Exception as e:
 #         raise HTTPException(status_code=500, detail=f"Error retrieving meme: {e}")
+
+
+
+"""
+@meme_router.delete('/{meme_id}', response_model=dict)
+async def delete_meme(meme_id: int, db: AsyncSession = Depends(get_db)):
+    try:
+        # Удаляем из базы данных
+        async with db.begin():
+            db_meme = await db.get(Meme, meme_id)
+            if not db_meme:
+                raise HTTPException(status_code=404, detail="Meme not found")
+        exists_statement = delete(Meme).where(
+            (Meme.id == meme_id)
+        )
+        await db.execute(exists_statement)
+        await db.commit()
+
+        # Удаляем из MinIO
+        if db_meme.image_url:
+            object_name = db_meme.image_url.split('/')[-1]
+            try:
+                minio_client.remove_object('memes', object_name)
+            except S3Error as err:
+                raise HTTPException(status_code=500, detail=f"MinIO error: {err}")
+
+        return {"status": "ok", "message": "Meme deleted successfully"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete meme: {e}")
+        """
