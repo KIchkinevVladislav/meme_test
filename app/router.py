@@ -4,7 +4,7 @@ from minio.error import S3Error
 
 from .db import get_db
 from .schemas import LoadingMeme, StatusResponse, ShowMemes
-from .crud import  get_list_memes, save_meme
+from .crud import  get_list_memes, save_meme, delete_meme_in_db, get_meme_from_db
 from minio_server import minio_client
 
 from app.models import Meme
@@ -45,11 +45,11 @@ async def get_memes(
 
 @meme_router.get('/{meme_id}', response_model=ShowMemes)
 async def get_meme(meme_id: int, db: AsyncSession = Depends(get_db)):
+    meme = await get_meme_from_db(db, meme_id)
+    if not meme:
+        raise HTTPException(status_code=404, detail=f"Meme number {meme_id} does not exist.")
+       
     try:
-        meme = await db.get(Meme, meme_id)
-        if not meme:
-            raise HTTPException(status_code=404, detail=f"Meme number {meme_id} does not exist.")
-
         meme_data = ShowMemes(id=meme.id, content=meme.content, image_url=meme.image_url)
 
         return meme_data
@@ -59,11 +59,11 @@ async def get_meme(meme_id: int, db: AsyncSession = Depends(get_db)):
 
 @meme_router.get('/image/{meme_id}')
 async def get_meme_image(meme_id: int, db: AsyncSession = Depends(get_db)):
+    meme = await get_meme_from_db(db, meme_id)
+    if not meme:
+        raise HTTPException(status_code=404, detail=f"Meme number {meme_id} does not exist.")
+    
     try:
-        meme = await db.get(Meme, meme_id)
-        if not meme:
-            raise HTTPException(status_code=404, detail=f"Meme number {meme_id} does not exist.")
-
         bucket_name = 'memes'
         file_name = meme.image_url.split('/')[-1]
 
@@ -85,7 +85,11 @@ async def update_meme(
     content = None,
     file: UploadFile = File(None),
     db: AsyncSession = Depends(get_db)
-):
+):    
+    meme = await get_meme_from_db(db, meme_id)
+    if not meme:
+        raise HTTPException(status_code=404, detail=f"Meme number {meme_id} does not exist.")
+    
     try:
         await save_meme(db, meme_id, content, file)
           
@@ -93,3 +97,19 @@ async def update_meme(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to update meme: {e}")
 # TODO: return information about meme?
+
+
+@meme_router.delete('/{meme_id}', response_model=StatusResponse)
+async def delete_meme(meme_id: int, db: AsyncSession = Depends(get_db)):
+    meme = await get_meme_from_db(db, meme_id)
+    if not meme:
+        raise HTTPException(status_code=404, detail=f"Meme number {meme_id} does not exist.")
+
+    try:
+        await delete_meme_in_db(db, meme_id, meme.image_url)
+
+        return StatusResponse(status="ok", message=f"Meme number {meme_id} deleted successfully")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete meme: {e}")
+    

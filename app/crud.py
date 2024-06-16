@@ -1,11 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import desc
+from sqlalchemy import desc, delete
 from typing import List, Optional
 from fastapi import HTTPException, UploadFile
 
 from .models import Meme
-from minio_server import update_image_in_minio, upload_image_to_minio
+from minio_server import update_image_in_minio, upload_image_to_minio, delete_image_from_minio
 
 
 async def get_list_memes(
@@ -31,8 +31,6 @@ async def get_list_memes(
 async def update_meme_data(db: AsyncSession, meme_id: Optional[int], content: Optional[str] = None, file: UploadFile = None):
     async with db.begin():
         meme = await db.get(Meme, meme_id)
-        if not meme:
-            raise HTTPException(status_code=404, detail=f"Meme number {meme_id} does not exist.")
         
         if content:
             meme.content = content
@@ -57,7 +55,25 @@ async def save_meme(db: AsyncSession,  meme_id: Optional[int] = None, content: O
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to save meme: {e}")
-    
 
 
+async def delete_meme_in_db(db: AsyncSession,  meme_id: Optional[int], image_url: Optional[str]):
     
+    async with db.begin():
+
+        exists_statement = delete(Meme).where(
+            (Meme.id == meme_id)
+        )
+        await db.execute(exists_statement)
+        await db.commit()
+
+    await delete_image_from_minio(image_url)   
+
+
+
+async def get_meme_from_db(db: AsyncSession, post_id: int):
+    async with db.begin():
+        post = await db.execute(
+            select(Meme).where(Meme.id == post_id)
+        )
+        return post.scalars().first()
