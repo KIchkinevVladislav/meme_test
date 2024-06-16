@@ -32,7 +32,7 @@ async def update_meme_data(db: AsyncSession, meme_id: Optional[int], content: Op
     async with db.begin():
         meme = await db.get(Meme, meme_id)
         if not meme:
-            raise HTTPException(status_code=404, detail="Meme not found")
+            raise HTTPException(status_code=404, detail=f"Meme number {meme_id} does not exist.")
         
         if content:
             meme.content = content
@@ -57,4 +57,7 @@ async def save_meme(db: AsyncSession,  meme_id: Optional[int] = None, content: O
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to save meme: {e}")
+    
+
+
     

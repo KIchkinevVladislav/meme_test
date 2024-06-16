@@ -46,9 +46,9 @@ async def get_memes(
 @meme_router.get('/{meme_id}', response_model=ShowMemes)
 async def get_meme(meme_id: int, db: AsyncSession = Depends(get_db)):
     try:
-        meme = await db.get_one(Meme, meme_id)
+        meme = await db.get(Meme, meme_id)
         if not meme:
-            raise HTTPException(status_code=404, detail="Meme not found")
+            raise HTTPException(status_code=404, detail=f"Meme number {meme_id} does not exist.")
 
         meme_data = ShowMemes(id=meme.id, content=meme.content, image_url=meme.image_url)
 
@@ -62,7 +62,7 @@ async def get_meme_image(meme_id: int, db: AsyncSession = Depends(get_db)):
     try:
         meme = await db.get(Meme, meme_id)
         if not meme:
-            raise HTTPException(status_code=404, detail="Meme not found")
+            raise HTTPException(status_code=404, detail=f"Meme number {meme_id} does not exist.")
 
         bucket_name = 'memes'
         file_name = meme.image_url.split('/')[-1]
