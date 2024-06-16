@@ -1,20 +1,17 @@
 from pydantic import BaseModel
 
 
-class MemeBase(BaseModel):
+class BaseMeme(BaseModel):
     content: str
+
+
+class LoadingMeme(BaseMeme):
+    pass
+
+
+class ShowMemes(BaseMeme):
+    id: int
     image_url: str
-
-
-class LoadingMeme(BaseModel):
-    content: str
-
-
-class ShowMeme(MemeBase):
-    int: int
-
-    class Config:
-        from_attributes = True
 
 
 class StatusResponse(BaseModel):
