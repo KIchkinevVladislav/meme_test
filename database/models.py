@@ -4,7 +4,8 @@ from sqlalchemy import (
     String,
     Integer,
     Text,
-    DateTime
+    DateTime,
+    ForeignKey,
     )
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -27,9 +28,8 @@ class User(Base):
     surname = Column(String, nullable=False)
     email = Column(String, nullable=False, unique=True) # we use email as username for authentific
     hashed_password = Column(String, nullable=False)
-    roles = Column(ARRAY(String), nullable=False)
 
-    posts = relationship(
+    memes = relationship(
         'Meme',
         back_populates='author',
         cascade='all, delete-orphan',
@@ -47,3 +47,10 @@ class Meme(Base):
     image_url = Column(String, unique=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
+    user_id = Column(
+        UUID(as_uuid=True), 
+        ForeignKey('users.id', ondelete='CASCADE'), 
+            nullable=False
+    )
+
+    author = relationship('User', back_populates='memes')
