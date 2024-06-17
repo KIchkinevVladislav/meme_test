@@ -1,19 +1,19 @@
-from fastapi import APIRouter, Query, Depends, HTTPException, File, UploadFile, Response
+from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from minio.error import S3Error
 
 from database.db import get_db
 from database.schemas import LoadingMeme, StatusResponse, ShowMemes
-from app.crud import  get_list_memes, save_meme, delete_meme_in_db, get_meme_from_db
+from .private_crud import  save_meme, delete_meme_in_db, get_meme_from_db
 from minio_server import minio_client
 
 from validate import validate_image
 
 
-meme_router = APIRouter()
+_private_router = APIRouter()
 
 
-@meme_router.post('/', response_model=StatusResponse)
+@_private_router.post('/', response_model=StatusResponse)
 async def upload_meme(content: str = Depends(LoadingMeme), file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     try:
         file = validate_image(file)
@@ -26,23 +26,7 @@ async def upload_meme(content: str = Depends(LoadingMeme), file: UploadFile = Fi
 
 
 
-@meme_router.get('/', response_model=list[ShowMemes])
-async def get_memes(
-    db: AsyncSession = Depends(get_db),     
-    page: int = Query(0, ge=0, description="Номер страницы."),
-    size: int = Query(10, le=100, description="Количество записей на странице"),
-    sort_by: str = Query('id', description='Сортировка по значению'),
-    sort_desc: bool = Query(False, description='Сортировка в обратном порядке')) -> list[ShowMemes]:
-
-    memes = await get_list_memes(db=db, page=page, size=size, sort_by=sort_by, sort_desc=sort_desc)
-    
-    if not memes:
-        raise HTTPException(status_code=404, detail="No memes found")
-    
-    return [ShowMemes(id=meme.id, content=meme.content, image_url=meme.image_url) for meme in memes]
-
-
-@meme_router.get('/{meme_id}', response_model=ShowMemes)
+@_private_router .get('/{meme_id}', response_model=ShowMemes)
 async def get_meme(meme_id: int, db: AsyncSession = Depends(get_db)):
     meme = await get_meme_from_db(db, meme_id)
     if not meme:
@@ -56,7 +40,7 @@ async def get_meme(meme_id: int, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Error retrieving meme data: {e}")
 
 
-@meme_router.get('/image/{meme_id}')
+@_private_router.get('/image/{meme_id}')
 async def get_meme_image(meme_id: int, db: AsyncSession = Depends(get_db)):
     meme = await get_meme_from_db(db, meme_id)
     if not meme:
@@ -78,7 +62,7 @@ async def get_meme_image(meme_id: int, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Error retrieving meme image: {e}")
 
 
-@meme_router.patch('/{meme_id}', response_model=StatusResponse)
+@_private_router.patch('/{meme_id}', response_model=StatusResponse)
 async def update_meme(
     meme_id: int,
     content = None,
@@ -98,7 +82,7 @@ async def update_meme(
 # TODO: return information about meme?
 
 
-@meme_router.delete('/{meme_id}', response_model=StatusResponse)
+@_private_router.delete('/{meme_id}', response_model=StatusResponse)
 async def delete_meme(meme_id: int, db: AsyncSession = Depends(get_db)):
     meme = await get_meme_from_db(db, meme_id)
     if not meme:
