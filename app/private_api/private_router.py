@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from minio.error import S3Error
 
 from database.db import get_db
-from database.schemas import LoadingMeme, StatusResponse, ShowMemes
+from database.schemas import LoadingMeme, StatusResponse, ShowMemesPrivate
 from database.models import User
 from .private_crud import  save_meme, delete_meme_in_db, get_meme_from_db
 from app.public_api.public_crud import get_current_user_from_token
@@ -28,14 +28,17 @@ async def upload_meme(content: str = Depends(LoadingMeme), file: UploadFile = Fi
 
 
 
-@_private_router.get('/{meme_id}', response_model=ShowMemes)
-async def get_meme(meme_id: int, db: AsyncSession = Depends(get_db)):
+@_private_router.get('/{meme_id}', response_model=ShowMemesPrivate)
+async def get_meme(meme_id: int, db: AsyncSession = Depends(get_db), author: User = Depends(get_current_user_from_token)):
     meme = await get_meme_from_db(db, meme_id)
     if not meme:
         raise HTTPException(status_code=404, detail=f"Meme number {meme_id} does not exist.")
-       
+    
+    if meme.user_id != author.id:
+        raise HTTPException(status_code=404, detail=f"Only the author can access this meme.")
+
     try:
-        meme_data = ShowMemes(id=meme.id, content=meme.content, image_url=meme.image_url)
+        meme_data = ShowMemesPrivate(id=meme.id, content=meme.content, image_url=meme.image_url, created_at=meme.created_at)
 
         return meme_data
     except Exception as e:
@@ -43,10 +46,13 @@ async def get_meme(meme_id: int, db: AsyncSession = Depends(get_db)):
 
 
 @_private_router.get('/image/{meme_id}')
-async def get_meme_image(meme_id: int, db: AsyncSession = Depends(get_db)):
+async def get_meme_image(meme_id: int, db: AsyncSession = Depends(get_db), author: User = Depends(get_current_user_from_token)):
     meme = await get_meme_from_db(db, meme_id)
     if not meme:
         raise HTTPException(status_code=404, detail=f"Meme number {meme_id} does not exist.")
+    
+    if meme.user_id != author.id:
+        raise HTTPException(status_code=404, detail=f"Only the author can access this meme.")
     
     try:
         bucket_name = 'memes'
@@ -69,11 +75,14 @@ async def update_meme(
     meme_id: int,
     content = None,
     file: UploadFile = File(None),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db), author: User = Depends(get_current_user_from_token)
 ):    
     meme = await get_meme_from_db(db, meme_id)
     if not meme:
         raise HTTPException(status_code=404, detail=f"Meme number {meme_id} does not exist.")
+    
+    if meme.user_id != author.id:
+        raise HTTPException(status_code=404, detail=f"Only the author can update this meme.")  
     
     try:
         await save_meme(db, meme_id, content, file)
@@ -85,10 +94,13 @@ async def update_meme(
 
 
 @_private_router.delete('/{meme_id}', response_model=StatusResponse)
-async def delete_meme(meme_id: int, db: AsyncSession = Depends(get_db)):
+async def delete_meme(meme_id: int, db: AsyncSession = Depends(get_db), author: User = Depends(get_current_user_from_token)):
     meme = await get_meme_from_db(db, meme_id)
     if not meme:
         raise HTTPException(status_code=404, detail=f"Meme number {meme_id} does not exist.")
+
+    if meme.user_id != author.id:
+        raise HTTPException(status_code=404, detail=f"Only the author can update this meme.") 
 
     try:
         await delete_meme_in_db(db, meme_id, meme.image_url)

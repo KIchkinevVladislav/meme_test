@@ -14,11 +14,14 @@ class LoadingMeme(BaseMeme):
     pass
 
 
-class ShowMemes(BaseMeme):
+class ShowMemesPublic(BaseMeme):
+    id: int
+    created_at: datetime
+
+class ShowMemesPrivate(BaseMeme):
     id: int
     image_url: str
     created_at: datetime
-
 
 class UpdateMeme(BaseModel):
     content: Optional[str]
