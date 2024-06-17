@@ -1,11 +1,19 @@
+from typing import List, Optional
+from datetime import datetime, timedelta
+from starlette import status
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import desc
-from typing import List
+from fastapi import Depends, HTTPException
+from fastapi.security import OAuth2PasswordBearer
+from jose import jwt, JWTError
 
+from database.db import get_db
 from database.models import Meme
 from database.schemas import UserCreate, ShowUser
 from utils import Hasher, UserDAL
+from config import (SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES,)
 
 async def get_list_memes(
             db: AsyncSession, 
@@ -43,3 +51,70 @@ async def create_new_user(body: UserCreate, db: AsyncSession) -> ShowUser:
             surname=user.surname,
             email=user.email,
         )
+
+
+async def _get_user_by_email_for_auth(
+        email: str, db: AsyncSession
+):
+    async with db.begin():
+        user_dal = UserDAL(db)
+        return await user_dal.get_user_by_email(
+            email=email,
+        )
+    
+
+async def authenticate_user(
+        email: str, password: str, db: AsyncSession
+):
+    user = await _get_user_by_email_for_auth(email=email, db=db)
+    if user is None:
+        return
+    if not Hasher.verify_password(password, user.hashed_password):
+        return
+    return user
+
+
+# variables to configure JWT
+SECRET_KEY = SECRET_KEY
+ALGORITHM = ALGORITHM
+ACCESS_TOKEN_EXPIRE_MINUTES = ACCESS_TOKEN_EXPIRE_MINUTES
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/user/token')
+
+async def get_current_user_from_token(
+        token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)
+):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail='Could not validate credentials',
+    )
+    try:
+        payload = jwt.decode(
+            token, 
+            SECRET_KEY,
+            algorithms = [ALGORITHM],
+        )
+        email: str = payload.get('sub')
+        if email is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    user = await _get_user_by_email_for_auth(email=email, db=db)
+    if user is None:
+        raise credentials_exception
+    return user
+
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.now() + expires_delta
+    else:
+        expire = datetime.now() + timedelta(
+            minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+        )
+    to_encode.update({'exp': expire})
+    encoded_jwt = jwt.encode(
+        to_encode, SECRET_KEY, algorithm=ALGORITHM
+    )
+    return encoded_jwt
