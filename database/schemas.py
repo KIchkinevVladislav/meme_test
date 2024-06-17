@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 import re
 import uuid
@@ -16,6 +17,7 @@ class LoadingMeme(BaseMeme):
 class ShowMemes(BaseMeme):
     id: int
     image_url: str
+    created_at: datetime
 
 
 class UpdateMeme(BaseModel):

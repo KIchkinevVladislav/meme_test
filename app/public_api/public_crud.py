@@ -53,7 +53,7 @@ async def create_new_user(body: UserCreate, db: AsyncSession) -> ShowUser:
         )
 
 
-async def _get_user_by_email_for_auth(
+async def get_user_by_email_for_auth(
         email: str, db: AsyncSession
 ):
     async with db.begin():
@@ -66,7 +66,7 @@ async def _get_user_by_email_for_auth(
 async def authenticate_user(
         email: str, password: str, db: AsyncSession
 ):
-    user = await _get_user_by_email_for_auth(email=email, db=db)
+    user = await get_user_by_email_for_auth(email=email, db=db)
     if user is None:
         return
     if not Hasher.verify_password(password, user.hashed_password):
@@ -99,7 +99,7 @@ async def get_current_user_from_token(
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    user = await _get_user_by_email_for_auth(email=email, db=db)
+    user = await get_user_by_email_for_auth(email=email, db=db)
     if user is None:
         raise credentials_exception
     return user
