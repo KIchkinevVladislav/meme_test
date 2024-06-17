@@ -7,3 +7,6 @@ alembic
 psycopg2-binary
 
 minio
+
+passlib
+bcrypt

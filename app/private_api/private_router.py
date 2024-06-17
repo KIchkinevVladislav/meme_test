@@ -7,7 +7,7 @@ from database.schemas import LoadingMeme, StatusResponse, ShowMemes
 from .private_crud import  save_meme, delete_meme_in_db, get_meme_from_db
 from minio_server import minio_client
 
-from validate import validate_image
+from utils import validate_image
 
 
 _private_router = APIRouter()
@@ -26,7 +26,7 @@ async def upload_meme(content: str = Depends(LoadingMeme), file: UploadFile = Fi
 
 
 
-@_private_router .get('/{meme_id}', response_model=ShowMemes)
+@_private_router.get('/{meme_id}', response_model=ShowMemes)
 async def get_meme(meme_id: int, db: AsyncSession = Depends(get_db)):
     meme = await get_meme_from_db(db, meme_id)
     if not meme:
