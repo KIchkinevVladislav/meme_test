@@ -4,7 +4,9 @@ from minio.error import S3Error
 
 from database.db import get_db
 from database.schemas import LoadingMeme, StatusResponse, ShowMemes
+from database.models import User
 from .private_crud import  save_meme, delete_meme_in_db, get_meme_from_db
+from app.public_api.public_crud import get_current_user_from_token
 from minio_server import minio_client
 
 from utils import validate_image
@@ -14,10 +16,10 @@ _private_router = APIRouter()
 
 
 @_private_router.post('/', response_model=StatusResponse)
-async def upload_meme(content: str = Depends(LoadingMeme), file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
+async def upload_meme(content: str = Depends(LoadingMeme), file: UploadFile = File(...), db: AsyncSession = Depends(get_db),  author: User = Depends(get_current_user_from_token)):
     try:
         file = validate_image(file)
-        await save_meme(db, content=content.content, file=file)
+        await save_meme(db, content=content.content, file=file, author=author)
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to upload image: {e}")

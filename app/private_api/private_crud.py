@@ -4,7 +4,7 @@ from sqlalchemy import delete
 from typing import Optional
 from fastapi import HTTPException, UploadFile
 
-from database.models import Meme
+from database.models import Meme, User
 from minio_server import update_image_in_minio, upload_image_to_minio, delete_image_from_minio
 
 async def update_meme_data(db: AsyncSession, meme_id: Optional[int], content: Optional[str] = None, file: UploadFile = None):
@@ -21,14 +21,14 @@ async def update_meme_data(db: AsyncSession, meme_id: Optional[int], content: Op
         await db.flush()
 
 
-async def save_meme(db: AsyncSession,  meme_id: Optional[int] = None, content: Optional[str] = None, file: UploadFile = None):
+async def save_meme(db: AsyncSession,  meme_id: Optional[int] = None, content: Optional[str] = None, file: UploadFile = None, author: User = None):
     try:
         if meme_id:
             await update_meme_data(db, meme_id, content, file)
         else:
             async with db.begin():
                 image_url = await upload_image_to_minio(file)
-                meme = Meme(content=content, image_url=image_url)
+                meme = Meme(content=content, image_url=image_url, author=author)
                 db.add(meme)
                 await db.flush()
 
