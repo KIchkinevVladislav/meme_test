@@ -3,8 +3,10 @@ from typing import Optional
 import re
 import uuid
 
+
 from pydantic import BaseModel, EmailStr, field_validator
 from fastapi import UploadFile, HTTPException
+
 
 class BaseMeme(BaseModel):
     content: str

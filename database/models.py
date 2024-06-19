@@ -10,12 +10,10 @@ from sqlalchemy import (
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import (
-    ARRAY,
     UUID
     )
 
-from .db import Base
-
+from database.db import Base
 
 class User(Base):
     """

@@ -11,3 +11,6 @@ minio
 passlib
 bcrypt
 python-jose
+
+pytest
+asynctest
