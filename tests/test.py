@@ -12,9 +12,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 
 from database.db import Base, get_db
-from app.private_api.private_crud import save_meme
 from database.models import Meme, User
-from utils import UserDAL
 from main import app
 
 
@@ -100,7 +98,7 @@ class TestUserRouter(TestBase):
         self.assertEqual(response.status_code, 401)
 
 
-class TestMemePublicRouterError(TestBase):
+class TestMemePublicRouterNotMemes(TestBase):
 
     def test_not_memes(self):
         response = self.client.get(
