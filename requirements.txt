@@ -12,5 +12,7 @@ passlib
 bcrypt
 python-jose
 
+aiofiles
+
 pytest
 asynctest

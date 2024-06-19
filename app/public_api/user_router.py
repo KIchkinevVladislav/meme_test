@@ -11,9 +11,9 @@ from .public_crud import create_new_user, authenticate_user, create_access_token
 _user_router = APIRouter()
 
 @_user_router.post('/sign-up', response_model=ShowUser)
-async def create_user(form_data: UserCreate, db: AsyncSession = Depends(get_db)) -> ShowUser:
+async def create_user(body: UserCreate, db: AsyncSession = Depends(get_db)) -> ShowUser:
     try:
-        return await create_new_user(form_data, db)
+        return await create_new_user(body, db)
     except Exception as err:
         raise HTTPException(status_code=503, detail=f"Database error: {err}")
 
