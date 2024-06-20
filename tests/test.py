@@ -41,9 +41,12 @@ async def drop_db():
 class TestBase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        asyncio.run(drop_db())
         asyncio.run(init_db())
-    
+        
+    @classmethod
+    def tearDownClass(cls):
+        asyncio.run(drop_db())
+        
     def setUp(self):
         self.client = TestClient(app)
 
@@ -235,6 +238,24 @@ class TestMemePrivateRouter(TestBase):
 
             self.assertEqual(response.status_code, 500)
             self.assertIn("Failed to upload image: 400: Uploaded file is not an image", response.json()["detail"])
+
+
+    def test_update_meme_success(self):
+        headers = Headers({"Authorization": f"Bearer {self.token}"})
+
+        with open("tests/fixtures/test_image_3.jpeg", "rb") as f:
+            file_content = f.read()
+
+        files = {"file": ("test_image.jpg", BytesIO(file_content), "image/jpeg"),}
+        data = {'content': 'New Meme description'}
+
+        response = self.client.patch("/memes/", files=files, data=data, headers=headers)
+
+        assert response.status_code == 200
+        assert response.json() == {"status": "ok", "message": "Meme updated successfully"}
+
+
+
 
 
 async def create_test_data_meme():
