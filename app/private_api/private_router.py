@@ -74,8 +74,8 @@ async def get_meme_image(meme_id: int, db: AsyncSession = Depends(get_db), autho
 @_private_router.patch('/{meme_id}', response_model=StatusResponse)
 async def update_meme(
     meme_id: int,
-    description = None,
     file: UploadFile = File(None),
+    description: str = None,
     db: AsyncSession = Depends(get_db), author: User = Depends(get_current_user_from_token)
 ):    
     meme = await get_meme_from_db(db, meme_id)
@@ -86,12 +86,11 @@ async def update_meme(
         raise HTTPException(status_code=404, detail=f"Only the author can update this meme.")  
     
     try:
+        file = validate_image(file)
         await save_meme(db, meme_id, description, file)
-          
-        return StatusResponse(status="ok", message="Meme updated successfully")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to update meme: {e}")
-# TODO: return information about meme?
+        raise HTTPException(status_code=500, detail=f"Failed to upload image: {e}")
+    return StatusResponse(status="ok", message="Meme updated successfully")
 
 
 @_private_router.delete('/{meme_id}', response_model=StatusResponse)

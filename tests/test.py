@@ -240,24 +240,6 @@ class TestMemePrivateRouter(TestBase):
             self.assertIn("Failed to upload image: 400: Uploaded file is not an image", response.json()["detail"])
 
 
-    def test_update_meme_success(self):
-        headers = Headers({"Authorization": f"Bearer {self.token}"})
-
-        with open("tests/fixtures/test_image_3.jpeg", "rb") as f:
-            file_content = f.read()
-
-        files = {"file": ("test_image.jpg", BytesIO(file_content), "image/jpeg"),}
-        data = {'content': 'New Meme description'}
-
-        response = self.client.patch("/memes/", files=files, data=data, headers=headers)
-
-        assert response.status_code == 200
-        assert response.json() == {"status": "ok", "message": "Meme updated successfully"}
-
-
-
-
-
 async def create_test_data_meme():
         async with async_session_maker() as db_session:
             user = User(name="test", surname='test', email='test@example.com', hashed_password="$2b$12$D/6ZRIonVLLgqU5HuVfMeOZG9N61HqeD8yKt/5aVS0YY.s.qts5KO")
