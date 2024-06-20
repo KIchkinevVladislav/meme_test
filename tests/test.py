@@ -1,5 +1,6 @@
 import os
-import io
+from io import BytesIO
+from starlette.datastructures import Headers
 from typing import AsyncGenerator
 import asyncio
 import unittest
@@ -149,10 +150,95 @@ class TestMemePublicRouter(TestBase):
         self.assertIn("detail", response.json())
         self.assertEqual(response.json()["detail"], "No memes found")
     
-  
+
+class TestMemePrivateRouter(TestBase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+
+        client = TestClient(app)
+
+        response = client.post(
+            "/user/sign-up",
+            json={
+                "name": "test",
+                "surname": "test",
+                "email": "test@example.com",
+                "password": "testpassword",
+            },
+        )
+        response.status_code == 200
+
+        response = client.post(
+            "/user/token",
+            data={
+                "username": "test@example.com",
+                "password": "testpassword"
+            },
+        )
+        response.status_code == 200
+
+
+    def setUp(self):
+        super().setUp()
+
+        response = self.client.post(
+            "/user/token",
+            data={
+                "username": "test@example.com",
+                "password": "testpassword"
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+
+        self.token = response.json()["access_token"]
+
+
+    def test_upload_meme_success(self):
+        headers = Headers({"Authorization": f"Bearer {self.token}"})
+
+        with open("tests/fixtures/test_image_2.jpeg", "rb") as f:
+            file_content = f.read()
+
+        files = {"file": ("test_image.jpg", BytesIO(file_content), "image/jpeg"),}
+        data = {'content': 'Meme description'}
+
+        response = self.client.post("/memes/", files=files, data=data, headers=headers)
+
+        assert response.status_code == 200
+        assert response.json() == {"status": "ok", "message": "Meme uploaded successfully"}
+
+    def test_upload_meme_unauthorized(self):    
+        headers = {} 
+        with open("tests/fixtures/test_image_2.jpeg", "rb") as f:
+            file_content = f.read()
+
+        files = {"file": ("test_image.jpg", BytesIO(file_content), "image/jpeg"),}
+        data = {'content': 'Meme description'}
+
+        response = self.client.post("/memes/", files=files, data=data, headers=headers)
+
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.json()["detail"], "Not authenticated")
+
+
+def test_upload_meme_invalid_image(self):
+        headers = Headers({"Authorization": f"Bearer {self.token}"})
+
+        with open("tests/fixtures/test.txt", "rb") as f:
+            file_content = f.read()
+
+        files = {"file": ("test_image.jpg", BytesIO(file_content), "image/jpeg"),}
+        data = {'content': 'Meme description'}
+
+        response = self.client.post("/memes/", files=files, data=data, headers=headers)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("Invalid file type", response.json()["detail"])
+        
 
 async def create_test_data_meme():
-        async with async_session_maker()  as db_session:
+        async with async_session_maker() as db_session:
             user = User(name="test", surname='test', email='test@example.com', hashed_password="$2b$12$D/6ZRIonVLLgqU5HuVfMeOZG9N61HqeD8yKt/5aVS0YY.s.qts5KO")
             db_session.add(user)
             await db_session.flush()
@@ -167,8 +253,8 @@ async def create_test_data_meme():
                 async with aiofiles.open(file_path, 'rb') as f:
                     file_content = await f.read()
 
-                file = UploadFile(filename=os.path.basename(file_path), file=io.BytesIO(file_content))
-                meme = Meme(content="Test Meme", image_url=file.filename, author=user)
+                file = UploadFile(filename=os.path.basename(file_path), file=BytesIO(file_content))
+                meme = Meme(description="Test Meme", image_url=file.filename, author=user)
                 db_session.add(meme)
 
             await db_session.commit()

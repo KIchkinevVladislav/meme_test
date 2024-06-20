@@ -22,4 +22,4 @@ async def get_memes(
     if not memes:
         raise HTTPException(status_code=404, detail="No memes found")
     
-    return [ShowMemesPublic(id=meme.id, content=meme.content, created_at=meme.created_at) for meme in memes]
+    return [ShowMemesPublic(id=meme.id, description=meme.description, created_at=meme.created_at) for meme in memes]

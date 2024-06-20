@@ -16,3 +16,4 @@ aiofiles
 
 pytest
 asynctest
+requests

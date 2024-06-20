@@ -1,8 +1,8 @@
 """create base
 
-Revision ID: e71132678f6e
+Revision ID: 2e5e7702cdeb
 Revises: 
-Create Date: 2024-06-17 22:32:03.674680
+Create Date: 2024-06-20 03:45:35.132300
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'e71132678f6e'
+revision: str = '2e5e7702cdeb'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -31,7 +31,7 @@ def upgrade() -> None:
     )
     op.create_table('memes',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('content', sa.Text(), nullable=True),
+    sa.Column('description', sa.Text(), nullable=True),
     sa.Column('image_url', sa.String(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.Column('user_id', sa.UUID(), nullable=False),

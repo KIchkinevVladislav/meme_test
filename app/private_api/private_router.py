@@ -16,10 +16,11 @@ _private_router = APIRouter()
 
 
 @_private_router.post('/', response_model=StatusResponse)
-async def upload_meme(content: str = Depends(LoadingMeme), file: UploadFile = File(...), db: AsyncSession = Depends(get_db),  author: User = Depends(get_current_user_from_token)):
+async def upload_meme(file: UploadFile, description: str = None, 
+                       db: AsyncSession = Depends(get_db),  author: User = Depends(get_current_user_from_token)):
     try:
         file = validate_image(file)
-        await save_meme(db, content=content.content, file=file, author=author)
+        await save_meme(db, description=description, file=file, author=author)
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to upload image: {e}")
@@ -38,7 +39,7 @@ async def get_meme(meme_id: int, db: AsyncSession = Depends(get_db), author: Use
         raise HTTPException(status_code=404, detail=f"Only the author can access this meme.")
 
     try:
-        meme_data = ShowMemesPrivate(id=meme.id, content=meme.content, image_url=meme.image_url, created_at=meme.created_at)
+        meme_data = ShowMemesPrivate(id=meme.id, description=meme.description, image_url=meme.image_url, created_at=meme.created_at)
 
         return meme_data
     except Exception as e:
@@ -73,7 +74,7 @@ async def get_meme_image(meme_id: int, db: AsyncSession = Depends(get_db), autho
 @_private_router.patch('/{meme_id}', response_model=StatusResponse)
 async def update_meme(
     meme_id: int,
-    content = None,
+    description = None,
     file: UploadFile = File(None),
     db: AsyncSession = Depends(get_db), author: User = Depends(get_current_user_from_token)
 ):    
@@ -85,7 +86,7 @@ async def update_meme(
         raise HTTPException(status_code=404, detail=f"Only the author can update this meme.")  
     
     try:
-        await save_meme(db, meme_id, content, file)
+        await save_meme(db, meme_id, description, file)
           
         return StatusResponse(status="ok", message="Meme updated successfully")
     except Exception as e:

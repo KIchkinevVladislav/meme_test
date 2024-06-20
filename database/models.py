@@ -41,7 +41,7 @@ class Meme(Base):
     __tablename__ = 'memes'
 
     id = Column(Integer, primary_key=True, index=True)
-    content = Column(Text)
+    description = Column(Text)
     image_url = Column(String, unique=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
