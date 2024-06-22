@@ -17,7 +17,7 @@ from database.models import Meme, User
 from main import app
 
 
-DATABASE_URL_TEST = "postgresql+asyncpg://postgres:postgres@localhost:5432/postgres_test"
+DATABASE_URL_TEST = "postgresql+asyncpg://postger:postgres@localhost:5432/postgres_test"
 
 engine_test = create_async_engine(DATABASE_URL_TEST, poolclass=NullPool)
 
@@ -42,15 +42,13 @@ class TestBase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         asyncio.run(init_db())
+    
+        cls.client = TestClient(app)
         
     @classmethod
     def tearDownClass(cls):
         asyncio.run(drop_db())
         
-    def setUp(self):
-        self.client = TestClient(app)
-
-
 class TestUserRouter(TestBase):
         
     def test_good_user(self):
@@ -152,12 +150,10 @@ class TestMemePublicRouter(TestBase):
         self.assertEqual(response.json()["detail"], "No memes found")
     
 
-class TestMemePrivateRouterUpload(TestBase):
+class TestBaseForPrivateRouter(TestBase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-
-        cls.client = TestClient(app)
 
         response = cls.client.post(
             "/user/sign-up",
@@ -181,8 +177,33 @@ class TestMemePrivateRouterUpload(TestBase):
 
         cls.headers = Headers({"Authorization": f"Bearer {cls.token}"})
 
-    def setUp(self):
-        super().setUp()
+        response = cls.client.post(
+            "/user/sign-up",
+            json={
+                "name": "testtest",
+                "surname": "testtest",
+                "email": "testtest@example.com",
+                "password": "testtestpassword",
+                },
+            )
+
+        response = cls.client.post(
+            "/user/token",
+            data={
+                "username": "testtest@example.com",
+                "password": "testtestpassword"
+            },
+        )
+
+        cls.token_2 = response.json()["access_token"]
+
+        cls.headers_2 = Headers({"Authorization": f"Bearer {cls.token_2}"})
+
+
+class TestMemePrivateRouterUpload(TestBaseForPrivateRouter):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
 
     def test_upload_meme_success(self):
 
@@ -225,32 +246,7 @@ class TestMemePrivateRouterUpload(TestBase):
         self.assertIn("Failed to upload image: 400: Uploaded file is not an image", response.json()["detail"])
 
 
-class TestMemePrivateRouterUpdate(TestMemePrivateRouterUpload):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-
-        response = cls.client.post(
-            "/user/sign-up",
-            json={
-                "name": "testtest",
-                "surname": "testtest",
-                "email": "testtest@example.com",
-                "password": "testtestpassword",
-                },
-            )
-
-        response = cls.client.post(
-            "/user/token",
-            data={
-                "username": "testtest@example.com",
-                "password": "testtestpassword"
-            },
-        )
-
-        cls.token_2 = response.json()["access_token"]
-
-        cls.headers_2 = Headers({"Authorization": f"Bearer {cls.token_2}"})
+class TestMemePrivateRouterUpdate(TestBaseForPrivateRouter):
 
     def setUp(self):
         super().setUp()
@@ -327,13 +323,18 @@ class TestMemePrivateRouterUpdate(TestMemePrivateRouterUpload):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json()['detail'], "Only the author can update this meme.")
 
-class TestMemePrivateRouterGetMeme(TestMemePrivateRouterUpdate):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
+class TestMemePrivateRouterGetMeme(TestBaseForPrivateRouter):
 
     def setUp(self):
         super().setUp()
+
+        with open("tests/fixtures/test_image_2.jpeg", "rb") as f:
+            file_content = f.read()
+
+        files = {"file": ("test_image.jpg", BytesIO(file_content), "image/jpeg"),}
+        params = {'description': 'Meme description'}
+
+        response = self.client.post("/memes/", files=files, params=params, headers=self.headers)   
 
     def test_get_meme_not_meme(self):
         response = self.client.get(f"/memes/{6}", headers=self.headers)
