@@ -15,10 +15,10 @@ from sqlalchemy.pool import NullPool
 from database.db import Base, get_db
 from database.models import Meme, User
 from main import app
-from config import (DB_TEST_HOST, DB_TEST_PORT, DB_TEST_NAME, DB_TEST_USER, DB_TEST_PASS,)
 
-# DATABASE_URL_TEST = f"postgresql+asyncpg://{DB_TEST_USER}:{DB_TEST_PASS}@{DB_TEST_HOST}:{DB_TEST_PORT}/{DB_TEST_NAME}"
-DATABASE_URL_TEST = "postgresql+asyncpg://postgres:postgres@localhost:5432/postgres_test"
+from config import (DB_TEST_USER, DB_TEST_PASS, DB_TEST_HOST, DB_TEST_PORT, DB_TEST_NAME,)
+
+DATABASE_URL_TEST = f"postgresql+asyncpg://{DB_TEST_USER}:{DB_TEST_PASS}@{DB_TEST_HOST}:{DB_TEST_PORT}/{DB_TEST_NAME}"
 
 engine_test = create_async_engine(DATABASE_URL_TEST, poolclass=NullPool)
 
