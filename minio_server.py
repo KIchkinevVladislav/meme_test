@@ -4,15 +4,12 @@ from minio import Minio
 from minio.error import S3Error
 from fastapi import UploadFile, HTTPException
 
-
-minio_endpoint = 'localhost:9000'
-minio_acces_key = 'admin'
-minio_secret_key='password'
+from config import (MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY,)
 
 minio_client = Minio(
-    minio_endpoint,
-    access_key=minio_acces_key,
-    secret_key=minio_secret_key,
+    MINIO_ENDPOINT,
+    access_key=MINIO_ACCESS_KEY,
+    secret_key=MINIO_SECRET_KEY,
     secure=False
 )
 
