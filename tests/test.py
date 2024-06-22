@@ -187,8 +187,10 @@ class TestMemePrivateRouterUpload(TestBase):
 
         self.token = response.json()["access_token"]
 
+        self.headers = Headers({"Authorization": f"Bearer {self.token}"})
+
     def test_upload_meme_success(self):
-        headers = Headers({"Authorization": f"Bearer {self.token}"})
+
 
         with open("tests/fixtures/test_image_2.jpeg", "rb") as f:
             file_content = f.read()
@@ -196,20 +198,20 @@ class TestMemePrivateRouterUpload(TestBase):
         files = {"file": ("test_image.jpg", BytesIO(file_content), "image/jpeg"),}
         data = {'content': 'Meme description'}
 
-        response = self.client.post("/memes/", files=files, data=data, headers=headers)
+        response = self.client.post("/memes/", files=files, data=data, headers=self.headers)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"status": "ok", "message": "Meme uploaded successfully"})
 
     def test_upload_meme_unauthorized(self):    
-        headers = {} 
+        self.headers = {} 
         with open("tests/fixtures/test_image_2.jpeg", "rb") as f:
             file_content = f.read()
 
         files = {"file": ("test_image.jpg", BytesIO(file_content), "image/jpeg"),}
         data = {'content': 'Meme description'}
 
-        response = self.client.post("/memes/", files=files, data=data, headers=headers)
+        response = self.client.post("/memes/", files=files, data=data, headers=self.headers)
 
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.json()["detail"], "Not authenticated")
@@ -223,7 +225,7 @@ class TestMemePrivateRouterUpload(TestBase):
         files = {"file": ("test.txt", BytesIO(file_content), "text/plain"),}
         data = {'content': 'Meme description'}
 
-        response = self.client.post("/memes/", files=files, data=data, headers=headers)
+        response = self.client.post("/memes/", files=files, data=data, headers=self.headers)
 
         self.assertEqual(response.status_code, 500)
         self.assertIn("Failed to upload image: 400: Uploaded file is not an image", response.json()["detail"])
@@ -248,12 +250,7 @@ class TestMemePrivateRouterUpdate(TestMemePrivateRouterUpload):
 
         response = self.client.post("/memes/", files=files, data=data, headers=headers)
 
-        assert response.status_code == 200
-        assert response.json() == {"status": "ok", "message": "Meme uploaded successfully"}
-
-
     def test_update_meme_success(self):
-        headers = Headers({"Authorization": f"Bearer {self.token}"})
 
         with open("tests/fixtures/test_image_1.jpg", "rb") as f:
             file_content = f.read()
@@ -261,7 +258,7 @@ class TestMemePrivateRouterUpdate(TestMemePrivateRouterUpload):
         files = {"file": ("test_image.jpg", BytesIO(file_content), "image/jpeg"),}
         data_update = {'content': 'Meme description new'}
 
-        response = self.client.patch(f"/memes/{1}", files=files, data=data_update, headers=headers)
+        response = self.client.patch(f"/memes/{1}", files=files, data=data_update, headers=self.headers)
         self.assertEqual(response.status_code, 200)
         assert response.json() == {"status": "ok", "message": "Meme updated successfully"}
 
@@ -279,20 +276,19 @@ class TestMemePrivateRouterUpdate(TestMemePrivateRouterUpload):
         self.assertEqual(response.json()['detail'], 'Meme number 6 does not exist.')
 
     def test_update_meme_unauthorized(self):    
-        headers = {} 
+        self.headers = {} 
         with open("tests/fixtures/test_image_1.jpg", "rb") as f:
             file_content = f.read()
 
         files = {"file": ("test_image.jpg", BytesIO(file_content), "image/jpeg"),}
         data_update = {'content': 'Meme description new'}
 
-        response = self.client.patch(f"/memes/{1}", files=files, data=data_update, headers=headers)
+        response = self.client.patch(f"/memes/{1}", files=files, data=data_update, headers=self.headers)
 
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.json()["detail"], "Not authenticated")
 
     def test_update_meme_invalid_image(self):
-        headers = Headers({"Authorization": f"Bearer {self.token}"})
 
         with open("tests/fixtures/test.txt", "rb") as f:
             file_content = f.read()
@@ -300,14 +296,23 @@ class TestMemePrivateRouterUpdate(TestMemePrivateRouterUpload):
         files = {"file": ("test.txt", BytesIO(file_content), "text/plain"),}
         data_update = {'content': 'Meme description new'}
 
-        response = self.client.patch(f"/memes/{1}", files=files, data=data_update, headers=headers)
+        response = self.client.patch(f"/memes/{1}", files=files, data=data_update, headers=self.headers)
 
         self.assertEqual(response.status_code, 500)
         self.assertIn("Failed to upload image: 400: Uploaded file is not an image", response.json()["detail"])
 
 
+class TestMemePrivateRouterGetMeme(TestMemePrivateRouterUpdate):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
 
-# class 
+
+    def setUp(self):
+        super().setUp()    
+
+
+
 async def create_test_data_meme():
         async with async_session_maker() as db_session:
             user = User(name="test", surname='test', email='test@example.com', hashed_password="$2b$12$D/6ZRIonVLLgqU5HuVfMeOZG9N61HqeD8yKt/5aVS0YY.s.qts5KO")
