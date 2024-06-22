@@ -191,14 +191,13 @@ class TestMemePrivateRouterUpload(TestBase):
 
     def test_upload_meme_success(self):
 
-
         with open("tests/fixtures/test_image_2.jpeg", "rb") as f:
             file_content = f.read()
 
         files = {"file": ("test_image.jpg", BytesIO(file_content), "image/jpeg"),}
-        data = {'content': 'Meme description'}
+        params = {'description': 'Meme description'}
 
-        response = self.client.post("/memes/", files=files, data=data, headers=self.headers)
+        response = self.client.post("/memes/", files=files, params=params, headers=self.headers)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"status": "ok", "message": "Meme uploaded successfully"})
@@ -209,9 +208,9 @@ class TestMemePrivateRouterUpload(TestBase):
             file_content = f.read()
 
         files = {"file": ("test_image.jpg", BytesIO(file_content), "image/jpeg"),}
-        data = {'content': 'Meme description'}
+        params = {'description': 'Meme description'}
 
-        response = self.client.post("/memes/", files=files, data=data, headers=self.headers)
+        response = self.client.post("/memes/", files=files, params=params, headers=self.headers)
 
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.json()["detail"], "Not authenticated")
@@ -223,9 +222,9 @@ class TestMemePrivateRouterUpload(TestBase):
             file_content = f.read()
 
         files = {"file": ("test.txt", BytesIO(file_content), "text/plain"),}
-        data = {'content': 'Meme description'}
+        params = {'description': 'Meme description'}
 
-        response = self.client.post("/memes/", files=files, data=data, headers=self.headers)
+        response = self.client.post("/memes/", files=files, params=params, headers=self.headers)
 
         self.assertEqual(response.status_code, 500)
         self.assertIn("Failed to upload image: 400: Uploaded file is not an image", response.json()["detail"])
@@ -246,9 +245,9 @@ class TestMemePrivateRouterUpdate(TestMemePrivateRouterUpload):
             file_content = f.read()
 
         files = {"file": ("test_image.jpg", BytesIO(file_content), "image/jpeg"),}
-        data = {'content': 'Meme description'}
+        params = {'description': 'Meme description'}
 
-        response = self.client.post("/memes/", files=files, data=data, headers=headers)
+        response = self.client.post("/memes/", files=files, params=params, headers=headers)
 
     def test_update_meme_success(self):
 
@@ -256,9 +255,10 @@ class TestMemePrivateRouterUpdate(TestMemePrivateRouterUpload):
             file_content = f.read()
 
         files = {"file": ("test_image.jpg", BytesIO(file_content), "image/jpeg"),}
-        data_update = {'content': 'Meme description new'}
+        params_update = {'description': 'Meme description new'}
 
-        response = self.client.patch(f"/memes/{1}", files=files, data=data_update, headers=self.headers)
+        response = self.client.patch(f"/memes/{1}", files=files, params=params_update, headers=self.headers)
+        
         self.assertEqual(response.status_code, 200)
         assert response.json() == {"status": "ok", "message": "Meme updated successfully"}
 
@@ -269,9 +269,9 @@ class TestMemePrivateRouterUpdate(TestMemePrivateRouterUpload):
             file_content = f.read()
 
         files = {"file": ("test_image.jpg", BytesIO(file_content), "image/jpeg"),}
-        data_update = {'content': 'Meme description new'}
+        params_update = {'description': 'Meme description new'}
 
-        response = self.client.patch(f"/memes/{6}", files=files, data=data_update, headers=headers)
+        response = self.client.patch(f"/memes/{6}", files=files, params=params_update, headers=headers)
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json()['detail'], 'Meme number 6 does not exist.')
 
@@ -281,9 +281,9 @@ class TestMemePrivateRouterUpdate(TestMemePrivateRouterUpload):
             file_content = f.read()
 
         files = {"file": ("test_image.jpg", BytesIO(file_content), "image/jpeg"),}
-        data_update = {'content': 'Meme description new'}
+        params_update = {'description': 'Meme description new'}
 
-        response = self.client.patch(f"/memes/{1}", files=files, data=data_update, headers=self.headers)
+        response = self.client.patch(f"/memes/{1}", files=files, params=params_update, headers=self.headers)
 
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.json()["detail"], "Not authenticated")
@@ -294,13 +294,12 @@ class TestMemePrivateRouterUpdate(TestMemePrivateRouterUpload):
             file_content = f.read()
 
         files = {"file": ("test.txt", BytesIO(file_content), "text/plain"),}
-        data_update = {'content': 'Meme description new'}
+        params_update = {'description': 'Meme description new'}
 
-        response = self.client.patch(f"/memes/{1}", files=files, data=data_update, headers=self.headers)
+        response = self.client.patch(f"/memes/{1}", files=files,params=params_update, headers=self.headers)
 
         self.assertEqual(response.status_code, 500)
         self.assertIn("Failed to upload image: 400: Uploaded file is not an image", response.json()["detail"])
-
 
 class TestMemePrivateRouterGetMeme(TestMemePrivateRouterUpdate):
     @classmethod
@@ -309,9 +308,19 @@ class TestMemePrivateRouterGetMeme(TestMemePrivateRouterUpdate):
 
 
     def setUp(self):
-        super().setUp()    
+        super().setUp()
 
+    def test_get_meme_not_meme(self):
+        response = self.client.get(f"/memes/{6}", headers=self.headers)
 
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json()['detail'], 'Meme number 6 does not exist.')
+
+    def test_get_meme_ok(self):
+        response = self.client.get(f"/memes/{1}", headers=self.headers)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['id'], 1)
+        self.assertEqual(response.json()['description'], 'Meme description')
 
 async def create_test_data_meme():
         async with async_session_maker() as db_session:

@@ -9,7 +9,7 @@ from fastapi import UploadFile, HTTPException
 
 
 class BaseMeme(BaseModel):
-    description: str
+    description: Optional[str]
 
 
 class LoadingMeme(BaseMeme):

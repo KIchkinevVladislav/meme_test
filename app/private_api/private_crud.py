@@ -48,11 +48,9 @@ async def delete_meme_in_db(db: AsyncSession,  meme_id: Optional[int], image_url
 
     await delete_image_from_minio(image_url)   
 
-
-
-async def get_meme_from_db(db: AsyncSession, post_id: int):
+async def get_meme_from_db(db: AsyncSession, meme_id: int):
     async with db.begin():
         post = await db.execute(
-            select(Meme).where(Meme.id == post_id)
+            select(Meme).where(Meme.id == meme_id)
         )
         return post.scalars().first()
