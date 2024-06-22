@@ -17,7 +17,7 @@ from database.models import Meme, User
 from main import app
 
 
-DATABASE_URL_TEST = "postgresql+asyncpg://postger:postgres@localhost:5432/postgres_test"
+DATABASE_URL_TEST = "postgresql+asyncpg://postgres:postgres@localhost:5432/postgres_test"
 
 engine_test = create_async_engine(DATABASE_URL_TEST, poolclass=NullPool)
 
