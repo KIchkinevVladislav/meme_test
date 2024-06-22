@@ -100,7 +100,7 @@ async def delete_meme(meme_id: int, db: AsyncSession = Depends(get_db), author: 
         raise HTTPException(status_code=404, detail=f"Meme number {meme_id} does not exist.")
 
     if meme.user_id != author.id:
-        raise HTTPException(status_code=404, detail=f"Only the author can update this meme.") 
+        raise HTTPException(status_code=404, detail=f"Only the author can delete this meme.") 
 
     try:
         await delete_meme_in_db(db, meme_id, meme.image_url)

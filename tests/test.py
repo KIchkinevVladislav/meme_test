@@ -15,8 +15,9 @@ from sqlalchemy.pool import NullPool
 from database.db import Base, get_db
 from database.models import Meme, User
 from main import app
+from config import (DB_TEST_HOST, DB_TEST_PORT, DB_TEST_NAME, DB_TEST_USER, DB_TEST_PASS,)
 
-
+# DATABASE_URL_TEST = f"postgresql+asyncpg://{DB_TEST_USER}:{DB_TEST_PASS}@{DB_TEST_HOST}:{DB_TEST_PORT}/{DB_TEST_NAME}"
 DATABASE_URL_TEST = "postgresql+asyncpg://postgres:postgres@localhost:5432/postgres_test"
 
 engine_test = create_async_engine(DATABASE_URL_TEST, poolclass=NullPool)
@@ -354,6 +355,38 @@ class TestMemePrivateRouterGetMeme(TestBaseForPrivateRouter):
         
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json()['detail'], "Only the author can access this meme.")
+
+
+class TestMemePrivateRouterDeleteMeme(TestBaseForPrivateRouter):
+
+    def setUp(self):
+        super().setUp()
+
+        with open("tests/fixtures/test_image_2.jpeg", "rb") as f:
+            file_content = f.read()
+
+        files = {"file": ("test_image.jpg", BytesIO(file_content), "image/jpeg"),}
+        params = {'description': 'Meme description'}
+
+        response = self.client.post("/memes/", files=files, params=params, headers=self.headers)   
+
+    def test_delete_meme_not_meme(self):
+        response = self.client.delete(f"/memes/{6}", headers=self.headers)
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json()['detail'], 'Meme number 6 does not exist.')
+
+    def test_delete_meme_ok(self):
+        response = self.client.delete(f"/memes/{1}", headers=self.headers)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"status": "ok", "message": "Meme number 1 deleted successfully"})
+
+    def test_delete_meme_no_author(self):
+        response = self.client.delete(f"/memes/{1}", headers=self.headers_2)
+        
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json()['detail'], "Only the author can delete this meme.")
 
 async def create_test_data_meme():
         async with async_session_maker() as db_session:
