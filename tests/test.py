@@ -159,9 +159,9 @@ class TestMemePrivateRouterUpload(TestBase):
     def setUpClass(cls):
         super().setUpClass()
 
-        client = TestClient(app)
+        cls.client = TestClient(app)
 
-        response = client.post(
+        response = cls.client.post(
             "/user/sign-up",
             json={
                 "name": "test",
@@ -170,24 +170,21 @@ class TestMemePrivateRouterUpload(TestBase):
                 "password": "testpassword",
             },
         )
-        response.status_code == 200
 
-
-    def setUp(self):
-        super().setUp()
-
-        response = self.client.post(
+        response = cls.client.post(
             "/user/token",
             data={
                 "username": "test@example.com",
                 "password": "testpassword"
             },
         )
-        self.assertEqual(response.status_code, 200)
 
-        self.token = response.json()["access_token"]
+        cls.token = response.json()["access_token"]
 
-        self.headers = Headers({"Authorization": f"Bearer {self.token}"})
+        cls.headers = Headers({"Authorization": f"Bearer {cls.token}"})
+
+    def setUp(self):
+        super().setUp()
 
     def test_upload_meme_success(self):
 
@@ -234,6 +231,18 @@ class TestMemePrivateRouterUpdate(TestMemePrivateRouterUpload):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+
+        # response_2 = self.client.post(
+        #     "/user/sign-up",
+        #     json={
+        #         "name": "test_test",
+        #         "surname": "test-test",
+        #         "email": "test_test@example.com",
+        #         "password": "test_testpassword",
+        #     },
+        # )
+        # response.status_code == 200 
+
 
 
     def setUp(self):
