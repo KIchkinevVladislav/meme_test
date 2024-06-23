@@ -5,6 +5,7 @@ from typing import AsyncGenerator
 import asyncio
 import unittest
 import aiofiles
+import asyncpg
 
 from fastapi import UploadFile
 from fastapi.testclient import TestClient
@@ -30,6 +31,15 @@ async def override_get_async_session() -> AsyncGenerator[AsyncSession, None]:
 
 app.dependency_overrides[get_db] = override_get_async_session
 
+async def wait_for_db():
+    for _ in range(25):
+        try:
+            conn = await asyncpg.connect(DATABASE_URL_TEST)
+            await conn.close()
+            return
+        except Exception as e:
+            await asyncio.sleep(1)
+
 async def init_db():
     async with engine_test.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -42,6 +52,7 @@ async def drop_db():
 class TestBase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        asyncio.run(wait_for_db())
         asyncio.run(init_db())
     
         cls.client = TestClient(app)
