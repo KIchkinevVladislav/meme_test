@@ -1,0 +1,503 @@
+openapi: 3.1.0
+info:
+  title: MemeBase API (test)
+  description: |-
+    API сервис позволяет взаимодействовать со своим персональным хранилищем мемов в MinIO.
+
+    Код приложения:
+    - [Репозиторий приложения](https://github.com/KIchkinevVladislav/meme_test)
+
+  contact:
+    email: kant1755@mail.ru
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000
+tags:
+  - name: Регистрация и аутентификация
+    description: Регистрация пользователя и получение доступа
+  - name: Публичный апи
+    description: Получение информации о хранящихся мемах
+  - name: Приватный апи
+    description: Взаимодействие пользователя со своими мемами. Доступно только после аутентификации.
+paths:
+  /user/sign-up:
+    post:
+      tags:
+        - Регистрация и аутентификация
+      summary: Регистрация пользователя на сервисе
+      description: Для регистрации необходимо заполнить все поля. Ваш email будет использовать при авторизации на сервисе.
+      operationId: create_user_user_sign_up_post
+      requestBody:
+        description: Created user object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+        required: true
+
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShowUser'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /user/token:
+    post:
+      tags:
+        - Регистрация и аутентификация
+      summary: Возвращает аутентификационный токен для использования в дальнейшем для запросов от имени указанного пользователя
+      description: Токен можно получить, воспользовавшись авторизацией по email и паролю.
+      operationId: login_for_access_token_user_token_post
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AccessTokenPost'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /memes:
+    get:
+      tags:
+        - Публичный апи
+      summary: Возвращает список всех мемов хранящихся в MinIO
+      description: Вы получите список всех мемов с их индфикаторами, описанием и датой создания. Возможно использовать пагинация (size определяет количество записей на странице ответа, page номер отображаемой страницы). Также доступна сортировка по значениям (id, description, created_at) и возможность осуществить сортировку в обратном порядке.
+      operationId: get_memes_memes__get
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            description: Номер страницы.
+            default: 0
+          description: Номер страницы.
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            maximum: 100
+            description: Количество записей на странице
+            default: 10
+          description: Количество записей на странице
+        - name: sort_by
+          in: query
+          required: false
+          schema:
+            type: string
+            description: Сортировка по значению
+            default: id
+            title: Sort By
+          description: Сортировка по значению
+        - name: sort_desc
+          in: query
+          required: false
+          schema:
+            type: boolean
+            description: Сортировка в обратном порядке
+            default: false
+            title: Sort Desc
+          description: Сортировка в обратном порядке
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ShowMemesPublic'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+        - Приватный апи
+      summary: Загрузка изображения в удаленное хранилище
+      operationId: upload_meme_memes__post
+      description: Используется для загруки изображения. Описание является необязательных параметром.
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: description
+          in: query
+          required: false
+          schema:
+            type: string
+            description: Текстовый комментарий к мему
+      requestBody:
+        description: изображение
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UploadMemePost'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /memes/{meme_id}:
+    get:
+      tags:
+        - Приватный апи
+      summary: Получение информации о загруженном меме.
+      description: Только пользователь загрузивший мем может получить подробну информацию о нем, в том числе ссылку на изображение. Если идентификатора мема не существует в базе данных Вам вернется ответ об этом.
+      operationId: get_meme_memes__meme_id__get
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: meme_id
+          in: path
+          description: числовой идентификатор мема
+          required: true
+          schema:
+            type: integer
+            default: 1
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShowMemesPrivate'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError' 
+    patch:
+      tags:
+        - Приватный апи
+      summary: Одновление мема (изображение или описание)
+      description: Вы можете обновить информацию о Вашем меме в базе данных и/или удаленном хранилище. Можно обновить описание и/или изображение. Если идентификатора мема не существует в базе данных Вам вернется ответ об этом.
+      operationId: update_meme_memes__meme_id__patch
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: meme_id
+          in: path
+          required: true
+          description: числовой идентификатор мема
+          schema:
+            type: integer
+            default: 1
+        - name: description
+          in: query
+          required: false
+          schema:
+            type: string
+            description: новое описание мема            
+      requestBody:
+        description: изображение
+        content:
+          multipart/form-data:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/UpdateMemePatch'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+        - Приватный апи
+      summary: Удаление мема из базы данных и удаленного хранилища.
+      description: Только автор может удалить мем. Если идентификатора мема не существует в базе данных Вам вернется ответ об этом.
+      operationId: delete_meme_memes__meme_id__delete
+      security: 
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: meme_id
+          in: path
+          required: true
+          description: числовой идентификатор мема
+          schema:
+            type: integer
+            default: 1
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /memes/image/{meme_id}:
+    get:
+      tags:
+        - Приватный апи
+      summary: Возвращает изображение мема
+      description: Автор мема может получить его изображение из удаленного хранилища. сли идентификатора мема не существует в базе данных Вам вернется ответ об этом.
+      operationId: get_meme_image_memes_image__meme_id__get
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: meme_id
+          in: path
+          required: true
+          description: числовой идентификатор мема
+          schema:
+            type: integer
+            default: 1
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            image/*:
+              schema:
+                type: string
+                format: binary
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    UserCreate:
+      required:
+        - name
+        - surname
+        - email
+        - password
+      type: object
+      properties:
+        name:
+          type: string
+          examples: [Ivan]
+          decsription: имя пользователя
+        surname:
+          type: string
+          examples: [Ivanov]
+          decsription: фамилия пользователя
+        email:
+          type: string
+          format: email
+          examples: [ivanod1971@mail.ru]
+          decsription: почта испольуется как логин при аутентификации
+        password:
+          type: string
+          examples: [qzxcvb09876]
+          decsription: пароль от аккаунта
+    ShowUser:
+      required:
+        - user_id
+        - name
+        - surname
+        - email
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          examples: [123e4567-e89b-12d3-a456-426655440000]
+          decsription: идентификатор пользователя
+        name:
+          type: string
+          examples: [Ivan]
+          decsription: имя пользователя
+        surname:
+          type: string
+          examples: [Ivanov]
+          decsription: фамилия пользователя
+        email:
+          type: string
+          format: email
+          examples: [ivanov1971@mail.ru]
+          decsription: почта испольуется как логин при аутентификации
+    Token:
+      required:
+        - access_token
+        - token_type
+      type: object
+      properties:
+        access_token:
+          type: string
+          examples: [ea135929105c4f29a0f5117d2960926f]
+          decsription: токен доступа
+        token_type:
+          type: string
+          examples: [Bearer]
+          decsription: тип токена
+    AccessTokenPost:
+      properties:
+        grant_type:
+          anyOf:
+            - type: string
+              pattern: password
+        username:
+          type: string
+          decsription: email пользователя
+          examples: [ivanov1971@mail.ru]
+        password:
+          type: string
+          decsription: пароль пользователя
+          examples: [qzxcvb09876]
+        scope:
+          type: string
+          title: Scope
+          default: ""
+        client_id:
+          anyOf:
+            - type: string
+        client_secret:
+          anyOf:
+            - type: string
+      type: object
+      required:
+        - username
+        - password
+    ShowMemesPublic:
+      required:
+        - description
+        - id
+        - created_at
+      type: object
+      properties:
+        description:
+          anyOf:
+            - type: string
+          description: описание мема
+          examples: [Очень веселый мем]
+        id:
+          type: integer
+          description: идентификатор мема в базе данных
+          examples: [1]
+        created_at:
+          type: string
+          format: date-time
+          description: дата создания мема
+    ShowMemesPrivate:
+      required:
+        - description
+        - id
+        - image_url
+        - created_at
+      type: object
+      properties:
+        description:
+          anyOf:
+            - type: string
+          description: описание мема
+          examples: [Очень веселый мем]
+        id:
+          type: integer
+          description: идентификатор мема в базе данных
+          examples: [1]
+        image_url:
+          type: string
+          description: ссылка на изображение
+        created_at:
+          type: string
+          format: date-time
+          description: дата создания мема
+    UploadMemePost:
+      type: object
+      required:
+        - file
+      properties:
+        file:
+          type: string
+          format: binary
+          title: File
+    UpdateMemePatch:
+      type: object
+      properties:
+        file:
+          type: string
+          format: binary
+    StatusResponse:
+      required:
+        - status
+        - message
+      type: object
+      properties:
+        status:
+          type: string
+          examples: [ok]
+        message:
+          type: string
+          examples: [Meme uploaded successfully]
+    HTTPValidationError:
+      type: object
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+    ValidationError:
+      required:
+        - loc
+        - msg
+        - type
+      properties:
+        loc:
+          items:
+            anyOf:
+              - type: string
+              - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+
+        type:
+          type: string
+          title: Error Type
+      type: object
+  securitySchemes:
+    OAuth2PasswordBearer:
+      type: oauth2
+      flows:
+        password:
+          scopes: {}
+          tokenUrl: /user/token
