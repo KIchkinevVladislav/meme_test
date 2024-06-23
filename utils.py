@@ -44,7 +44,8 @@ class UserDAL:
         user_row = res.fetchone()
         if user_row is not None:
             return user_row[0]
-
+        else:
+            return None
 
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
