@@ -78,7 +78,7 @@ class TestUserRouter(TestBase):
             },
         )
 
-        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.status_code, 404)
 
     def test_login_for_access_token(self):
         response = self.client.post(
