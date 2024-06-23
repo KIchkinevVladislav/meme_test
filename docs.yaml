@@ -321,7 +321,7 @@ components:
         email:
           type: string
           format: email
-          examples: [ivanod1971@mail.ru]
+          examples: [ivanov1971@mail.ru]
           decsription: почта испольуется как логин при аутентификации
         password:
           type: string
