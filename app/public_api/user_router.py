@@ -6,12 +6,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.db import get_db
 from database.schemas import  UserCreate, ShowUser, Token
-from .public_crud import create_new_user, authenticate_user, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
+from .public_crud import create_new_user, authenticate_user, create_access_token, get_user_by_email_for_auth, ACCESS_TOKEN_EXPIRE_MINUTES
 
 _user_router = APIRouter()
 
 @_user_router.post('/sign-up', response_model=ShowUser)
 async def create_user(body: UserCreate, db: AsyncSession = Depends(get_db)) -> ShowUser:
+    user = await get_user_by_email_for_auth(body.email, db)
+    if user:
+        raise HTTPException(status_code=404, detail=f"User with this email name already exists.")
     try:
         return await create_new_user(body, db)
     except Exception as err:
