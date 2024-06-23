@@ -15,5 +15,3 @@ python-jose
 aiofiles
 
 pytest
-asynctest
-requests
