@@ -13,6 +13,7 @@ from .public_crud import (ACCESS_TOKEN_EXPIRE_MINUTES, authenticate_user,
 
 _user_router = APIRouter()
 
+
 @_user_router.post('/sign-up', response_model=ShowUser)
 async def create_user(body: UserCreate, db: AsyncSession = Depends(get_db)) -> ShowUser:
     user = await get_user_by_email_for_auth(body.email, db)
@@ -25,8 +26,7 @@ async def create_user(body: UserCreate, db: AsyncSession = Depends(get_db)) -> S
 
 
 @_user_router.post('/token', response_model=Token)
-async def login_for_access_token(
-    form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm=Depends(), db: AsyncSession=Depends(get_db)
 ):
     user = await authenticate_user(form_data.username, form_data.password, db)
     if not user:

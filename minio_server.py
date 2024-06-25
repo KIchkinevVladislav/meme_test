@@ -26,7 +26,7 @@ async def upload_image_to_minio(file: UploadFile) -> str:
         minio_client.put_object(bucket_name, file_name, file.file, length=-1, part_size=10*1024*1024)
     except S3Error as err:
         raise HTTPException(status_code=500, detail=f"MinIO error: {err}")
-    
+
     return f"http://127.0.0.1:9001/{bucket_name}/{file_name}"
 
 
@@ -36,10 +36,10 @@ async def delete_image_from_minio(image_url: str):
         file_name = image_url.split("/")[-1]
 
         minio_client.remove_object(bucket_name, file_name)
-        
+
     except S3Error as err:
         raise HTTPException(status_code=500, detail=f"MinIO error: {err}")
-    
+
 
 async def update_image_in_minio(file: UploadFile, image_url: str):
     new_image_url = await upload_image_to_minio(file)

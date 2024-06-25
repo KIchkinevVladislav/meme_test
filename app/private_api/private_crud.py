@@ -10,10 +10,10 @@ from minio_server import (delete_image_from_minio, update_image_in_minio,
                           upload_image_to_minio)
 
 
-async def update_meme_data(db: AsyncSession, meme_id: Optional[int], description: Optional[str] = None, file: UploadFile = None):
+async def update_meme_data(db: AsyncSession, meme_id: Optional[int], description: Optional[str]=None, file: UploadFile=None):
     async with db.begin():
         meme = await db.get(Meme, meme_id)
-        
+       
         if description:
             meme.description = description
 
@@ -24,7 +24,7 @@ async def update_meme_data(db: AsyncSession, meme_id: Optional[int], description
         await db.flush()
 
 
-async def save_meme(db: AsyncSession,  meme_id: Optional[int] = None, description: Optional[str] = None, file: UploadFile = None, author: User = None):
+async def save_meme(db: AsyncSession,  meme_id: Optional[int]=None, description: Optional[str]=None, file: UploadFile=None, author: User=None):
     try:
         if meme_id:
             await update_meme_data(db, meme_id, description, file)
@@ -40,7 +40,7 @@ async def save_meme(db: AsyncSession,  meme_id: Optional[int] = None, descriptio
 
 
 async def delete_meme_in_db(db: AsyncSession,  meme_id: Optional[int], image_url: Optional[str]):
-    
+   
     async with db.begin():
 
         exists_statement = delete(Meme).where(
@@ -49,7 +49,7 @@ async def delete_meme_in_db(db: AsyncSession,  meme_id: Optional[int], image_url
         await db.execute(exists_statement)
         await db.commit()
 
-    await delete_image_from_minio(image_url)   
+    await delete_image_from_minio(image_url)  
 
 async def get_meme_from_db(db: AsyncSession, meme_id: int):
     async with db.begin():
@@ -57,3 +57,4 @@ async def get_meme_from_db(db: AsyncSession, meme_id: int):
             select(Meme).where(Meme.id == meme_id)
         )
         return post.scalars().first()
+    

@@ -17,12 +17,12 @@ from utils import Hasher, UserDAL
 
 
 async def get_list_memes(
-            db: AsyncSession, 
-            page: int, 
-            size: int, 
-            sort_by: str = 'id',
-            sort_desc: bool = False) -> List[Meme]:
-    
+            db: AsyncSession,
+            page: int,
+            size: int,
+            sort_by: str='id',
+            sort_desc: bool=False) -> List[Meme]:
+   
     query = select(Meme).offset(page*size).limit(size)
 
     # sorting
@@ -62,7 +62,7 @@ async def get_user_by_email_for_auth(
         return await user_dal.get_user_by_email(
             email=email,
         )
-    
+   
 
 async def authenticate_user(
         email: str, password: str, db: AsyncSession
@@ -83,7 +83,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = ACCESS_TOKEN_EXPIRE_MINUTES
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/user/token')
 
 async def get_current_user_from_token(
-        token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)
+        token: str=Depends(oauth2_scheme), db: AsyncSession=Depends(get_db)
 ):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -91,7 +91,7 @@ async def get_current_user_from_token(
     )
     try:
         payload = jwt.decode(
-            token, 
+            token,
             SECRET_KEY,
             algorithms = [ALGORITHM],
         )

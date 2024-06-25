@@ -17,7 +17,7 @@ class User(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String, nullable=False)
     surname = Column(String, nullable=False)
-    email = Column(String, nullable=False, unique=True)  #we use email as username for authentific
+    email = Column(String, nullable=False, unique=True)  # we use email as username for authentific
     hashed_password = Column(String, nullable=False)
 
     memes = relationship(
@@ -30,7 +30,7 @@ class User(Base):
 class Meme(Base):
     """
     Define the meme model.
-    """       
+    """
     __tablename__ = 'memes'
 
     id = Column(Integer, primary_key=True, index=True)
@@ -39,9 +39,9 @@ class Meme(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user_id = Column(
-        UUID(as_uuid=True), 
+        UUID(as_uuid=True),
         ForeignKey('users.id', ondelete='CASCADE'), 
-            nullable=False
+        nullable=False
     )
 
     author = relationship('User', back_populates='memes')

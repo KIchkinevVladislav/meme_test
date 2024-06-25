@@ -16,17 +16,16 @@ _private_router = APIRouter()
 
 
 @_private_router.post('/', response_model=StatusResponse)
-async def upload_meme(file: UploadFile, description: str = None, 
-                       db: AsyncSession = Depends(get_db),  author: User = Depends(get_current_user_from_token)):
+async def upload_meme(file: UploadFile, description: str=None, 
+                       db: AsyncSession=Depends(get_db),  author: User=Depends(get_current_user_from_token)):
     try:
         file = validate_image(file)
         await save_meme(db, description=description, file=file, author=author)
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to upload image: {e}")
-    
+   
     return StatusResponse(status="ok", message="Meme uploaded successfully")
-
 
 
 @_private_router.get('/{meme_id}', response_model=ShowMemesPrivate)
@@ -34,7 +33,7 @@ async def get_meme(meme_id: int, db: AsyncSession = Depends(get_db), author: Use
     meme = await get_meme_from_db(db, meme_id)
     if not meme:
         raise HTTPException(status_code=404, detail=f"Meme number {meme_id} does not exist.")
-    
+
     if meme.user_id != author.id:
         raise HTTPException(status_code=404, detail=f"Only the author can access this meme.")
 
@@ -74,17 +73,17 @@ async def get_meme_image(meme_id: int, db: AsyncSession = Depends(get_db), autho
 @_private_router.patch('/{meme_id}', response_model=StatusResponse)
 async def update_meme(
     meme_id: int,
-    file: UploadFile = File(None),
-    description: str = None,
-    db: AsyncSession = Depends(get_db), author: User = Depends(get_current_user_from_token)
-):    
+    file: UploadFile=File(None),
+    description: str=None,
+    db: AsyncSession=Depends(get_db), author: User=Depends(get_current_user_from_token)
+):
     meme = await get_meme_from_db(db, meme_id)
     if not meme:
         raise HTTPException(status_code=404, detail=f"Meme number {meme_id} does not exist.")
-    
+
     if meme.user_id != author.id:
         raise HTTPException(status_code=404, detail=f"Only the author can update this meme.")  
-    
+
     try:
         file = validate_image(file)
         await save_meme(db, meme_id, description, file)
@@ -109,4 +108,3 @@ async def delete_meme(meme_id: int, db: AsyncSession = Depends(get_db), author: 
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to delete meme: {e}")
-    

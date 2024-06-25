@@ -36,7 +36,6 @@ class UserDAL:
         self.db_session.add(new_user)
         await self.db_session.flush()
         return new_user
-    
 
     async def get_user_by_email(self, email: str):
         query = select(User).where(User.email == email)
@@ -48,6 +47,7 @@ class UserDAL:
             return None
 
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
+
 
 class Hasher:
     """

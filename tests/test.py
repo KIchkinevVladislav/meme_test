@@ -221,7 +221,7 @@ class TestMemePrivateRouterUpload(TestBaseForPrivateRouter):
         with open("tests/fixtures/test_image_2.jpeg", "rb") as f:
             file_content = f.read()
 
-        files = {"file": ("test_image.jpg", BytesIO(file_content), "image/jpeg"), }
+        files = {"file": ("test_image.jpg", BytesIO(file_content), "image/jpeg"),}
         params = {'description': 'Meme description'}
 
         response = self.client.post("/memes/", files=files, params=params, headers=self.headers)
