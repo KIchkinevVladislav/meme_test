@@ -1,19 +1,12 @@
 import uuid
-from sqlalchemy import (
-    Column,
-    String,
-    Integer,
-    Text,
-    DateTime,
-    ForeignKey,
-    )
-from sqlalchemy.sql import func
+
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import (
-    UUID
-    )
+from sqlalchemy.sql import func
 
 from database.db import Base
+
 
 class User(Base):
     """
@@ -24,7 +17,7 @@ class User(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String, nullable=False)
     surname = Column(String, nullable=False)
-    email = Column(String, nullable=False, unique=True) # we use email as username for authentific
+    email = Column(String, nullable=False, unique=True)  #we use email as username for authentific
     hashed_password = Column(String, nullable=False)
 
     memes = relationship(

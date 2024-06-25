@@ -1,23 +1,23 @@
-import os
-from io import BytesIO
-from starlette.datastructures import Headers
-from typing import AsyncGenerator
 import asyncio
+import os
 import unittest
+from io import BytesIO
+from typing import AsyncGenerator
+
 import aiofiles
 import asyncpg
-
 from fastapi import UploadFile
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
+from starlette.datastructures import Headers
 
+from config import (DB_TEST_HOST, DB_TEST_NAME, DB_TEST_PASS, DB_TEST_PORT,
+                    DB_TEST_USER)
 from database.db import Base, get_db
 from database.models import Meme, User
 from main import app
-
-from config import (DB_TEST_USER, DB_TEST_PASS, DB_TEST_HOST, DB_TEST_PORT, DB_TEST_NAME,)
 
 DATABASE_URL_TEST = f"postgresql+asyncpg://{DB_TEST_USER}:{DB_TEST_PASS}@{DB_TEST_HOST}:{DB_TEST_PORT}/{DB_TEST_NAME}"
 
@@ -47,22 +47,21 @@ async def init_db():
 async def drop_db():
     async with engine_test.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
-        
+       
 
 class TestBase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         asyncio.run(wait_for_db())
         asyncio.run(init_db())
-    
+   
         cls.client = TestClient(app)
-        
+       
     @classmethod
     def tearDownClass(cls):
         asyncio.run(drop_db())
-        
-class TestUserRouter(TestBase):
-        
+       
+class TestUserRouter(TestBase):        
     def test_good_user(self):
         response = self.client.post(
             "/user/sign-up",
@@ -222,11 +221,10 @@ class TestMemePrivateRouterUpload(TestBaseForPrivateRouter):
         with open("tests/fixtures/test_image_2.jpeg", "rb") as f:
             file_content = f.read()
 
-        files = {"file": ("test_image.jpg", BytesIO(file_content), "image/jpeg"),}
+        files = {"file": ("test_image.jpg", BytesIO(file_content), "image/jpeg"), }
         params = {'description': 'Meme description'}
 
         response = self.client.post("/memes/", files=files, params=params, headers=self.headers)
-
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"status": "ok", "message": "Meme uploaded successfully"})
 

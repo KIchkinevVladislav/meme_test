@@ -1,16 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, Response
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import (APIRouter, Depends, File, HTTPException, Response,
+                     UploadFile)
 from minio.error import S3Error
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.db import get_db
-from database.schemas import LoadingMeme, StatusResponse, ShowMemesPrivate
-from database.models import User
-from .private_crud import  save_meme, delete_meme_in_db, get_meme_from_db
 from app.public_api.public_crud import get_current_user_from_token
+from database.db import get_db
+from database.models import User
+from database.schemas import LoadingMeme, ShowMemesPrivate, StatusResponse
 from minio_server import minio_client
-
 from utils import validate_image
 
+from .private_crud import delete_meme_in_db, get_meme_from_db, save_meme
 
 _private_router = APIRouter()
 

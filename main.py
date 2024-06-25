@@ -1,7 +1,7 @@
 import uvicorn
+import yaml
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import yaml
 
 from app.private_api.private_router import _private_router
 from app.public_api.public_router import _public_router
@@ -22,6 +22,7 @@ app.add_middleware(
 with open("docs.yaml", "r", encoding="utf8") as file:
     custom_openapi_schema = yaml.safe_load(file)
 
+
 def custom_openapi():
     if app.openapi_schema:
         return app.openapi_schema
@@ -36,4 +37,3 @@ app.include_router(_user_router, prefix="/user", tags=["user"])
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
-    

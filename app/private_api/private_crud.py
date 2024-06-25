@@ -1,11 +1,14 @@
+from typing import Optional
+
+from fastapi import HTTPException, UploadFile
+from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import delete
-from typing import Optional
-from fastapi import HTTPException, UploadFile
 
 from database.models import Meme, User
-from minio_server import update_image_in_minio, upload_image_to_minio, delete_image_from_minio
+from minio_server import (delete_image_from_minio, update_image_in_minio,
+                          upload_image_to_minio)
+
 
 async def update_meme_data(db: AsyncSession, meme_id: Optional[int], description: Optional[str] = None, file: UploadFile = None):
     async with db.begin():

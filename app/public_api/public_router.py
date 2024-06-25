@@ -3,8 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.db import get_db
 from database.schemas import ShowMemesPublic
-from .public_crud import get_list_memes
 
+from .public_crud import get_list_memes
 
 _public_router = APIRouter()
 

@@ -1,11 +1,10 @@
-from datetime import datetime
-from typing import Optional
 import re
 import uuid
+from datetime import datetime
+from typing import Optional
 
-
+from fastapi import HTTPException, UploadFile
 from pydantic import BaseModel, EmailStr, field_validator
-from fastapi import UploadFile, HTTPException
 
 
 class BaseMeme(BaseModel):

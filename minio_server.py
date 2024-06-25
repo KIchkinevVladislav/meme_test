@@ -1,11 +1,10 @@
 import uuid
 
+from fastapi import HTTPException, UploadFile
 from minio import Minio
 from minio.error import S3Error
-from fastapi import UploadFile, HTTPException
 
-from config import (MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY,)
-
+from config import MINIO_ACCESS_KEY, MINIO_ENDPOINT, MINIO_SECRET_KEY
 
 minio_client = Minio(
     MINIO_ENDPOINT,

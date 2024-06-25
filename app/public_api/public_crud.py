@@ -1,19 +1,20 @@
-from typing import List, Optional
 from datetime import datetime, timedelta
-from starlette import status
+from typing import List, Optional
 
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy import desc
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, JWTError
+from jose import JWTError, jwt
+from sqlalchemy import desc
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from starlette import status
 
+from config import ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM, SECRET_KEY
 from database.db import get_db
 from database.models import Meme
-from database.schemas import UserCreate, ShowUser
+from database.schemas import ShowUser, UserCreate
 from utils import Hasher, UserDAL
-from config import (SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES,)
+
 
 async def get_list_memes(
             db: AsyncSession, 
